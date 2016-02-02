@@ -1,0 +1,226 @@
+# 簡介
+## 常见的 JDBC 组件
+JDBC 的 API 提供了以下接口和类：<br>
+**DriverManager** ：这个类管理一系列数据库驱动程序。匹配连接使用通信子协议从 JAVA 应用程序中请求合适的数据库驱动程序。识别 JDBC 下某个子协议的第一驱动程序将被用于建立数据库连接。<br>
+**Driver** : 这个接口处理与数据库服务器的通信。你将很少直接与驱动程序互动。相反，你使用 DriverManager 中的对象，它管理此类型的对象。它也抽象与驱动程序对象工作相关的详细信息。<br>
+**Connection** : 此接口具有接触数据库的所有方法。该连接对象表示通信上下文，即，所有与数据库的通信仅通过这个连接对象进行。<br>
+**Statement** : 使用创建于这个接口的对象将 SQL 语句提交到数据库。除了执行存储过程以外，一些派生的接口也接受参数。<br>
+**ResultSet** : 在你使用语句对象执行 SQL 查询后，这些对象保存从数据获得的数据。它作为一个迭代器，让您可以通过它的数据来移动。<br>
+**SQLException** : 这个类处理发生在数据库应用程序的任何错误。
+
+# 创建 JDBC 应用程序
+## 构建一个 JDBC 应用程序包括以下六个步骤
+
+- 导入数据包：需要你导入含有需要进行数据库编程的 JDBC 类的包。大多数情况下，使用 import java.sql. 就足够了。
+
+- 注册 JDBC 驱动器：需要你初始化一个驱动器，以便于你打开一个与数据库的通信通道。
+
+- 打开连接：需要使用 DriverManager.getConnection() 方法创建一个 Connection 对象，它代表与数据库的物理连接。
+
+- 执行查询：需要使用类型声明的对象建立并提交一个 SQL 语句到数据库。
+
+- 提取结果数据：要求使用适当的 ResultSet.getXXX() 方法从结果集中检索数据。
+
+- 清理环境：依靠 JVM 的垃圾收集来关闭所有需要明确关闭的数据库资源。
+
+# JDBC 驱动程序类型
+
+# 连接数据库
+编写建立一个 JDBC 连接的程序是相当简单的。下面是简单的四个步骤:
+
+- 导入 JDBC 包：在你的 Java 代码中，用 import 语句添加你所需的类。
+
+- 注册 JDBC 驱动程序：这一步会导致 JVM 加载所需的驱动程序到内存中执行，因此它可以实现你的 JDBC 请求。
+
+- 数据库 URL 制定：这是用来创建格式正确的地址指向你想要连接的数据库。
+
+- 创建连接对象：最后，代码调用 DriverManager 对象的 getConnection() 方法来建立实际的数据库连接。
+
+## 注册 JDBC 驱动程序
+通过加载 Oracle 驱动程序的类文件到内存中来注册驱动程序，因此它可以采用 JDBC 接口来实现。
+
+你需要在你的程序里做一次注册即可。你可以通过以下两种方式来注册一个驱动程序。
+
+### 方法1 - Class.forName()
+
+注册一个驱动程序中最常用的方法是使用 Java 的Class.forName() 方法来动态加载驱动程序的类文件到内存中，它会自动将其注册。这种方法更优越一些，因为它允许你对驱动程序的注册信息进行配置，便于移植。
+```
+try {
+   Class.forName("oracle.jdbc.driver.OracleDriver");
+}
+catch(ClassNotFoundException ex) {
+   System.out.println("Error: unable to load driver class!");
+   System.exit(1);
+}
+```
+可以使用 getInstance() 方法来解决不兼容的 JVM，但你必须编写如下所示的两个额外的异常-
+```
+try {
+   Class.forName("oracle.jdbc.driver.OracleDriver").newInstance();
+}
+catch(ClassNotFoundException ex) {
+   System.out.println("Error: unable to load driver class!");
+   System.exit(1);
+catch(IllegalAccessException ex) {
+   System.out.println("Error: access problem while loading!");
+   System.exit(2);
+catch(InstantiationException ex) {
+   System.out.println("Error: unable to instantiate driver!");
+   System.exit(3);
+}
+```
+### 方法2 - DriverManager.registerDriver()
+
+你注册一个驱动程序的第二种方法是使用静态 staticDriverManager.registerDriver() 方法。
+
+如果你使用的是不兼容 JVM 的非 JDK，比如微软提供的，你必须使用 registerDriver() 方法。
+
+下面是使用 registerDriver() 来注册 Oracle 驱动程序的示例
+```
+try {
+   Driver myDriver = new oracle.jdbc.driver.OracleDriver();
+   DriverManager.registerDriver( myDriver );
+}
+catch(ClassNotFoundException ex) {
+   System.out.println("Error: unable to load driver class!");
+   System.exit(1);
+}
+```
+## 数据库 URL 制定
+当你加载了驱动程序之后，你可以通过 DriverManager.getConnection() 方法建立一个连接。为方便参考，以下列出了三个加载 DriverManager.getConnection() 方法：
+```
+getConnection(String url)
+getConnection(String url, Properties prop)
+getConnection(String url, String user, String password)
+```
+|RDBMS|	JDBC 驱动程序名称	|URL 格式|
+|--|---|--|
+|MySQL|	com.mysql.jdbc.Driver|	jdbc:mysql://hostname/ databaseName|
+|ORACLE|	oracle.jdbc.driver.OracleDriver|	jdbc:oracle:thin:@hostname:port Number:databaseName
+|DB2|	COM.ibm.db2.jdbc.net.DB2Driver|	jdbc:db2:hostname:port Number/databaseName|
+|Sybase|	com.sybase.jdbc.SybDriver|	jdbc:sybase:Tds:hostname: port Number/databaseName|
+
+## 创建连接对象
+```
+三个加载 DriverManager.getConnection() 方法：
+
+getConnection(String url)
+getConnection(String url, Properties prop)
+getConnection(String url, String user, String password)
+```
+## 使用数据库 URL 的用户名和密码
+```
+String URL = "jdbc:oracle:thin:@amrood:1521:EMP";
+String USER = "username";
+String PASS = "password"
+Connection conn = DriverManager.getConnection(URL, USER, PASS);
+```
+## 只使用数据库 URL
+在这种情况下，数据库的 URL ，包括用户名和密码，将表现为以下的格式-
+```
+jdbc:oracle:driver:username/password@database
+```
+## 使用数据库 URL 和 Properties 对象
+```
+DriverManager.getConnection(String url, Properties info);
+```
+```
+import java.util.*;
+
+String URL = "jdbc:oracle:thin:@amrood:1521:EMP";
+Properties info = new Properties( );
+info.put( "user", "username" );
+info.put( "password", "password" );
+
+Connection conn = DriverManager.getConnection(URL, info);
+```
+# Statement 对象
+|接口	|推荐使用|
+|---|---|
+|Statement	|可以正常访问数据库，适用于运行静态 SQL 语句。 Statement 接口不接受参数。|
+|PreparedStatement|	计划多次使用 SQL 语句， PreparedStatement 接口运行时接受输入的参数。|
+|CallableStatement|	适用于当你要访问数据库存储过程的时候， CallableStatement 接口运行时也接受输入的参数。|
+## Statement 对象
+当你创建了一个 Statement 对象之后，你可以用它的三个执行方法的任一方法来执行 SQL 语句。
+
+boolean execute(String SQL) : 如果 ResultSet 对象可以被检索，则返回的布尔值为 true ，否则返回 false 。当你需要使用真正的动态 SQL 时，可以使用这个方法来执行 SQL DDL 语句。
+
+int executeUpdate(String SQL) : 返回执行 SQL 语句影响的行的数目。使用该方法来执行 SQL 语句，是希望得到一些受影响的行的数目，例如，INSERT，UPDATE 或 DELETE 语句。
+
+ResultSet executeQuery(String SQL) : 返回一个 ResultSet 对象。当你希望得到一个结果集时使用该方法，就像你使用一个 SELECT 语句。
+
+## PreparedStatement 对象
+PreparedStatement 接口扩展了 Statement 接口，它让你用一个常用的 Statement 对象增加几个高级功能。
+## CallableStatement 对象
+Oracle 存储过程-
+```
+CREATE OR REPLACE PROCEDURE getEmpName
+   (EMP_ID IN NUMBER, EMP_FIRST OUT VARCHAR) AS
+BEGIN
+   SELECT first INTO EMP_FIRST
+   FROM Employees
+   WHERE ID = EMP_ID;
+END;
+```
+ MySQL 数据库
+ ```
+ DELIMITER $$
+
+DROP PROCEDURE IF EXISTS `EMP`.`getEmpName` $$
+CREATE PROCEDURE `EMP`.`getEmpName`
+   (IN EMP_ID INT, OUT EMP_FIRST VARCHAR(255))
+BEGIN
+   SELECT first INTO EMP_FIRST
+   FROM Employees
+   WHERE ID = EMP_ID;
+END $$
+
+DELIMITER ;
+```
+三种类型的参数有：IN，OUT 和 INOUT。PreparedStatement 对象只使用 IN 参数。CallableStatement 对象可以使用所有的三个参数。
+
+这里是每个参数的定义-
+
+|参数|	描述|
+|---|--|
+|IN	|在 SQL 语句创建的时候该参数是未知的。你可以用 setXXX() 方法将值绑定到IN参数中。|
+|OUT|	该参数由 SQL 语句的返回值提供。你可以用 getXXX() 方法获取 OUT 参数的值。|
+|INOUT|	该参数同时提供输入输出的值。你可以用 setXXX() 方法将值绑定参数，并且用 getXXX() 方法获取值。|
+# 结果集
+一个 ResultSet 对象控制一个光标指向当前行的结果集。术语“结果集”是指包含在 ResultSet 对象中的行和列的数据。
+ResultSet 接口的方法可细分为三类-
+- 导航方法：用于移动光标。
+- 获取方法：用于查看当前行被光标所指向的列中的数据。
+- 更新方法：用于更新当前行的列中的数据。这些更新也会更新数据库中的数据。
+光标的移动基于 ResultSet 的属性。用相应的语句生成 ResultSet 对象时，同时生成 ResultSet 的属性。
+
+JDBC 提供了连接方法通过下列创建语句来生成你所需的 ResultSet 对象：
+- createStatement(int RSType, int RSConcurrency);
+- prepareStatement(String SQL, int RSType, int RSConcurrency);
+- prepareCall(String sql, int RSType, int RSConcurrency);
+
+第一个参数表示 ResultSet 对象的类型，第二个参数是两个 ResultSet 常量之一，该常量用于判断该结果集是只读的还是可修改的。
+ResultSet 的并发性
+RSConcurrency 的值如下所示，如果你不指定并发类型，将自动获得的值是 CONCUR_READ_ONLY。
+
+|并发性|	描述|
+|--|--|
+|ResultSet.CONCUR_READ_ONLY	|创建一个只读结果集，这是默认的值。|
+|ResultSet.CONCUR_UPDATABLE|	创建一个可修改的结果集。|
+到目前为止我们的示例可以如下所示，可以写成初始化一个 Statement 对象来创建一个只能前进，而且只读的 ResultSet 对象-
+## 导航结果集
+在 ResultSet 接口中包括如下几种方法涉及移动光标-
+
+|S.N.|	方法 & 描述|
+|:--:|--|
+|1|	public void beforeFirst() throws SQLException <br>将光标移动到第一行之前。|
+|2	|public void afterLast() throws SQLException <br>将光标移动到最后一行之后。|
+|3|	public boolean first() throws SQLException <br>将光标移动到第一行。|
+|4|	public void last() throws SQLException <br>将光标移动到最后一行。|
+|5|	public boolean absolute(int row) throws SQLException <br>将光标移动到指定的第 row 行。|
+|6|	public boolean relative(int row) throws SQLException <br>将光标移动到当前指向的位置往前或往后第 row 行的位置。|
+|7|	public boolean previous() throws SQLException <br>将光标移动到上一行，如果超过结果集的范围则返回 false。|
+|8|	public boolean next() throws SQLException <br>将光标移动到下一行，如果是结果集的最后一行则返回 false。|
+|9|	public int getRow() throws SQLException <br>返回当前光标指向的行数的值。|
+|10|	public void moveToInsertRow() throws SQLException <br>将光标移动到结果集中指定的行，可以在数据库中插入新的一行。当前光标位置将被记住。|
+|11|	public void moveToCurrentRow() throws SQLException <br>如果光标处于插入行，则将光标返回到当前行，其他情况下，这个方法不执行任何操作。|
